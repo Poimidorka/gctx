@@ -72,6 +72,12 @@ Use a custom profile directory:
 gctx --config /path/to/profiles
 ```
 
+If a context does not exist, `gctx` prints the saved contexts that are available:
+
+```text
+Context "missing" not found. Available contexts: p1 p2.
+```
+
 ## Development
 
 Build the binary:

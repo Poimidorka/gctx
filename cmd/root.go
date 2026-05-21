@@ -17,8 +17,9 @@ var (
 	removeProfile bool
 	saveProfile   bool
 	rootCmd       = &cobra.Command{
-		Use:   "gctx",
-		Short: "Git context switcher",
+		Use:          "gctx",
+		Short:        "Git context switcher",
+		SilenceUsage: true,
 		Long: `gctx is a command line tool that helps you 
 				switch git context with pre-defined profiles
 				includes the user name and email`,

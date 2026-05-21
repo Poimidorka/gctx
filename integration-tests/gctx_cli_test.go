@@ -167,9 +167,21 @@ func TestChangeErrorsOutsideGitRepo(t *testing.T) {
 func TestChangeErrorsWhenProfileIsMissing(t *testing.T) {
 	repo := initGitRepo(t)
 	configDir := t.TempDir()
+	writeFile(t, filepath.Join(configDir, "p1.config"), "[user]\n\tname = One\n")
+	writeFile(t, filepath.Join(configDir, "p2.config"), "[user]\n\tname = Two\n")
 
 	out, err := runGctx(t, repo, configDir, "missing")
 	requireError(t, err, out)
+	requireContains(t, out, gctxcmd.MissingContextMessage("missing", []string{"p1", "p2"}))
+}
+
+func TestChangeErrorsWhenNoProfilesExist(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+
+	out, err := runGctx(t, repo, configDir, "missing")
+	requireError(t, err, out)
+	requireContains(t, out, gctxcmd.MissingContextMessage("missing", nil))
 }
 
 func TestSaveErrorsWhenGitConfigIsMissing(t *testing.T) {
