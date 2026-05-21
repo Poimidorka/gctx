@@ -21,8 +21,8 @@ func saveCurrentGitProfile(profileStore *ProfileStore, name string, global bool)
 }
 
 func applyGitProfile(profileStore *ProfileStore, profile string, global bool) error {
-	profiles := profileStore.List()
-	if !profileExists(profile, profiles) {
+	exists, profiles := profileStore.Contains(profile)
+	if !exists {
 		return fmt.Errorf("%s", MissingContextMessage(profile, profiles))
 	}
 
@@ -43,13 +43,4 @@ func applyGitProfile(profileStore *ProfileStore, profile string, global bool) er
 		return err
 	}
 	return nil
-}
-
-func profileExists(profile string, profiles []string) bool {
-	for _, current := range profiles {
-		if current == profile {
-			return true
-		}
-	}
-	return false
 }

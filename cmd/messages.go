@@ -16,12 +16,14 @@ your global Git config.
 Profiles are snapshots of Git config files, commonly used for switching
 user.name, user.email, signing keys, and other identity settings.`
 
-	Examples = `  gctx
-  gctx personal
-  git config --local --add "user.name" "Alice"
-  gctx personal --save
-  gctx work --remove
-  gctx personal --global`
+	Examples = "  gctx\n" +
+		"  gctx personal\n" +
+		"  git config --local --add \"user.name\" \"Alice\"\n" +
+		"  gctx personal --save\n" +
+		"  gctx work --command \"git push\"\n" +
+		"  gctx personal --command /bin/bash --interactive\n" +
+		"  gctx work --remove\n" +
+		"  gctx personal --global"
 
 	NoActiveContextMessage = "No active profile in current git config."
 )
@@ -42,6 +44,14 @@ func RemovedContextMessage(profile string) string {
 	return fmt.Sprintf("%s Removed profile %q.", successMark(), profile)
 }
 
+func RunningCommandMessage(profile string, command string) string {
+	return fmt.Sprintf("%s Running %q with profile %q.", successMark(), command, profile)
+}
+
+func ExitedCommandMessage(profile string) string {
+	return fmt.Sprintf("%s Exited profile %q successfully.", successMark(), profile)
+}
+
 func MissingContextMessage(profile string, available []string) string {
 	if len(available) == 0 {
 		return fmt.Sprintf("%s Profile %q not found. No saved profiles.", errorMark(), profile)
@@ -55,6 +65,18 @@ func ProfileNameRequiredMessage() string {
 
 func ConflictingActionMessage() string {
 	return fmt.Sprintf("%s Use either --save or --remove, not both.", errorMark())
+}
+
+func CommandProfileRequiredMessage() string {
+	return fmt.Sprintf("%s Profile name is required with -c/--command.", errorMark())
+}
+
+func ConflictingCommandActionMessage() string {
+	return fmt.Sprintf("%s Use -c/--command without --save or --remove.", errorMark())
+}
+
+func CommandRequiredMessage() string {
+	return fmt.Sprintf("%s Command is required with -c/--command.", errorMark())
 }
 
 func successMark() string {

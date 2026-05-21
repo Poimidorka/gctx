@@ -239,6 +239,66 @@ func TestGlobalChangesProfileOutsideGitRepo(t *testing.T) {
 	requireContains(t, globalConfig, "profile = global-work")
 }
 
+func TestCommandRunsWithProfileScopedGitConfig(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+	writeFile(t, filepath.Join(configDir, "work.config"), "[user]\n\tname = Command Alice\n\temail = command@example.test\n")
+
+	out, err := runGctx(t, repo, configDir, "work", "-c", "git config --global user.name")
+	requireNoError(t, err, out)
+
+	requireContains(t, out, gctxcmd.RunningCommandMessage("work", "git config --global user.name"))
+	requireContains(t, out, "Command Alice")
+	requireContains(t, out, gctxcmd.ExitedCommandMessage("work"))
+}
+
+func TestInteractiveCommandForwardsOutput(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+	scriptPath := filepath.Join(t.TempDir(), "script")
+	writeFile(t, filepath.Join(configDir, "work.config"), "[user]\n\tname = Interactive Alice\n\temail = interactive@example.test\n")
+	writeExecutable(t, scriptPath, "#!/bin/sh\ngit config --global --get user.name\ngit config --global --get gctx.profile\n")
+
+	out, err := runGctx(t, repo, configDir, "work", "-c", scriptPath, "-i")
+	requireNoError(t, err, out)
+
+	requireContains(t, out, gctxcmd.RunningCommandMessage("work", scriptPath))
+	requireContains(t, out, "Interactive Alice")
+	requireContains(t, out, "work")
+	requireContains(t, out, gctxcmd.ExitedCommandMessage("work"))
+}
+
+func TestSaveKeepsShortFlag(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+	runGit(t, repo, "config", "--local", "user.name", "Saved Alice")
+
+	out, err := runGctx(t, repo, configDir, "work", "-s")
+	requireNoError(t, err, out)
+
+	requireEqual(t, out, gctxcmd.SavedContextMessage("work")+"\n")
+	requireContains(t, string(mustReadFile(t, filepath.Join(configDir, "work.config"))), "Saved Alice")
+}
+
+func TestCommandRequiresProfileName(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+
+	out, err := runGctx(t, repo, configDir, "-c", "git status")
+	requireError(t, err, out)
+	requireContains(t, out, gctxcmd.CommandProfileRequiredMessage())
+}
+
+func TestCommandConflictsWithSave(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+	writeFile(t, filepath.Join(configDir, "work.config"), "[user]\n\tname = Command Alice\n")
+
+	out, err := runGctx(t, repo, configDir, "work", "-c", "git status", "--save")
+	requireError(t, err, out)
+	requireContains(t, out, gctxcmd.ConflictingCommandActionMessage())
+}
+
 func runGctx(t *testing.T, dir, configDir string, args ...string) (string, error) {
 	t.Helper()
 	return runGctxWithHome(t, dir, "", configDir, args...)
@@ -246,11 +306,20 @@ func runGctx(t *testing.T, dir, configDir string, args ...string) (string, error
 
 func runGctxWithHome(t *testing.T, dir, home, configDir string, args ...string) (string, error) {
 	t.Helper()
+	return runGctxWithEnv(t, dir, home, configDir, nil, args...)
+}
+
+func runGctxWithEnv(t *testing.T, dir, home, configDir string, env []string, args ...string) (string, error) {
+	t.Helper()
 	allArgs := append([]string{"--config", configDir}, args...)
 	cmd := exec.Command(gctxBin, allArgs...)
 	cmd.Dir = dir
-	if home != "" {
-		cmd.Env = append(os.Environ(), "HOME="+home)
+	if home != "" || len(env) > 0 {
+		cmd.Env = os.Environ()
+		if home != "" {
+			cmd.Env = append(cmd.Env, "HOME="+home)
+		}
+		cmd.Env = append(cmd.Env, env...)
 	}
 	out, err := cmd.CombinedOutput()
 	return string(out), err
@@ -277,6 +346,13 @@ func initGitRepo(t *testing.T) string {
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeExecutable(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o700); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -61,6 +61,10 @@ func setGtxProfile(profile string, global bool) error {
 	if err != nil {
 		return err
 	}
+	return setGtxProfileInFile(path, profile)
+}
+
+func setGtxProfileInFile(path string, profile string) error {
 	out, err := exec.Command("git", "config", "-f", path, "--replace-all", "gctx.profile", profile).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("couldn't set current gctx profile: %w: %s", err, strings.TrimSpace(string(out)))

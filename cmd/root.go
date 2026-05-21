@@ -13,7 +13,9 @@ import (
 var (
 	// Path to the config directory, contains named git configs
 	cfgDir        string
+	command       string
 	globalProfile bool
+	interactive   bool
 	removeProfile bool
 	saveProfile   bool
 	rootCmd       = &cobra.Command{
@@ -27,6 +29,9 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store := NewProfileStore(cfgDir)
 			if len(args) == 0 {
+				if command != "" {
+					return fmt.Errorf("%s", CommandProfileRequiredMessage())
+				}
 				if saveProfile || removeProfile {
 					return fmt.Errorf("%s", ProfileNameRequiredMessage())
 				}
@@ -35,6 +40,10 @@ var (
 
 			profile := args[0]
 			switch {
+			case command != "" && (saveProfile || removeProfile):
+				return fmt.Errorf("%s", ConflictingCommandActionMessage())
+			case command != "":
+				return runProfileCommand(cmd.OutOrStdout(), store, profile, command, interactive)
 			case saveProfile && removeProfile:
 				return fmt.Errorf("%s", ConflictingActionMessage())
 			case saveProfile:
@@ -61,7 +70,9 @@ var (
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgDir, "config", "", "profile directory (default is $HOME/.config/gctx)")
+	rootCmd.Flags().StringVarP(&command, "command", "c", "", "command to run scoped to the named profile")
 	rootCmd.Flags().BoolVarP(&globalProfile, "global", "g", false, "target ~/.gitconfig instead of the current repository config")
+	rootCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "forward stdin, stdout, and stderr to the command")
 	rootCmd.Flags().BoolVarP(&removeProfile, "remove", "r", false, "remove the named profile")
 	rootCmd.Flags().BoolVarP(&saveProfile, "save", "s", false, "save the current git config as the named profile")
 }

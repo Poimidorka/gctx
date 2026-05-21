@@ -63,6 +63,16 @@ func (s *ProfileStore) List() []string {
 	return profiles
 }
 
+func (s *ProfileStore) Contains(profile string) (bool, []string) {
+	profiles := s.List()
+	for _, current := range profiles {
+		if current == profile {
+			return true, profiles
+		}
+	}
+	return false, profiles
+}
+
 // Get returns FileContent for a given profile
 func (s *ProfileStore) Get(profile string) (*FileContent, error) {
 	content, err := os.ReadFile(filepath.Join(s.configDir, addExt(profile)))

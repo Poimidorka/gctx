@@ -21,14 +21,14 @@ gctx
 When no profile is active:
 
 ```text
-No active context.
+No active profile in current git config.
 p1 p2 p3
 ```
 
 When a profile is active:
 
 ```text
-Current context: "p1".
+Current git profile: "p1".
 p1 p2 p3
 ```
 
@@ -36,7 +36,7 @@ Apply a profile to the current Git repository:
 
 ```bash
 gctx p1
-# ✔ Switched to context "p1".
+# ✔ Switched to profile "p1".
 ```
 
 Save the current repository Git config as a profile:
@@ -44,7 +44,7 @@ Save the current repository Git config as a profile:
 ```bash
 gctx p1 --save
 gctx p1 -s
-# ✔ Saved context "p1".
+# ✔ Saved context to profile: "p1".
 ```
 
 Remove a profile:
@@ -52,7 +52,7 @@ Remove a profile:
 ```bash
 gctx p1 --remove
 gctx p1 -r
-# ✔ Removed context "p1".
+# ✔ Removed profile "p1".
 ```
 
 Use the global Git config instead of the current repository config:
@@ -63,7 +63,13 @@ gctx -g
 gctx p1 --global
 gctx p1 -g
 gctx p1 --save --global
-gctx p1 -s -g
+```
+
+Run a command scoped to a profile without changing the current repository or global config:
+
+```bash
+gctx p1 -c /bin/bash -i
+gctx p1 -c "git config --global user.name"
 ```
 
 Use a custom profile directory:
@@ -75,7 +81,7 @@ gctx --config /path/to/profiles
 If a context does not exist, `gctx` prints the saved contexts that are available:
 
 ```text
-Context "missing" not found. Available contexts: p1 p2.
+✘ Profile "missing" not found. Available profiles: p1 p2.
 ```
 
 ## Development
@@ -100,6 +106,7 @@ make run ARGS="p1 --save"
 make run ARGS="p1"
 make run ARGS="p1 --remove"
 make run ARGS="p1 --global"
+make run ARGS='p1 -c "git config --global user.name"'
 ```
 
 The built binary is written to:
