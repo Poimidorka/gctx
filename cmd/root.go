@@ -17,13 +17,13 @@ var (
 	removeProfile bool
 	saveProfile   bool
 	rootCmd       = &cobra.Command{
-		Use:          "gctx",
-		Short:        "Git context switcher",
-		SilenceUsage: true,
-		Long: `gctx is a command line tool that helps you 
-				switch git context with pre-defined profiles
-				includes the user name and email`,
-		Args: cobra.MaximumNArgs(1),
+		Use:           "gctx [profile]",
+		Short:         "Switch Git profiles",
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		Long:          LongDescription,
+		Example:       Examples,
+		Args:          cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store := NewProfileStore(cfgDir)
 			if len(args) == 0 {
@@ -60,8 +60,8 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgDir, "config", "", "config directory (default is $HOME/.config/gctx)")
-	rootCmd.Flags().BoolVarP(&globalProfile, "global", "g", false, "use the global git config")
+	rootCmd.PersistentFlags().StringVar(&cfgDir, "config", "", "profile directory (default is $HOME/.config/gctx)")
+	rootCmd.Flags().BoolVarP(&globalProfile, "global", "g", false, "target ~/.gitconfig instead of the current repository config")
 	rootCmd.Flags().BoolVarP(&removeProfile, "remove", "r", false, "remove the named profile")
 	rootCmd.Flags().BoolVarP(&saveProfile, "save", "s", false, "save the current git config as the named profile")
 }

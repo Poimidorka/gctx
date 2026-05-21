@@ -45,7 +45,11 @@ func readCurrentGitConfig(global bool) (*FileContent, error) {
 }
 
 func getCurrentGtxProfile(global bool) (string, error) {
-	out, err := exec.Command("git", "config", configScope(global), "--get", "gctx.profile").CombinedOutput()
+	path, err := getGitConfigPath(global)
+	if err != nil {
+		return "", err
+	}
+	out, err := exec.Command("git", "config", "-f", path, "--get", "gctx.profile").CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("couldn't get current gctx profile: %w: %s", err, strings.TrimSpace(string(out)))
 	}
@@ -53,16 +57,13 @@ func getCurrentGtxProfile(global bool) (string, error) {
 }
 
 func setGtxProfile(profile string, global bool) error {
-	out, err := exec.Command("git", "config", configScope(global), "--replace-all", "gctx.profile", profile).CombinedOutput()
+	path, err := getGitConfigPath(global)
+	if err != nil {
+		return err
+	}
+	out, err := exec.Command("git", "config", "-f", path, "--replace-all", "gctx.profile", profile).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("couldn't set current gctx profile: %w: %s", err, strings.TrimSpace(string(out)))
 	}
 	return nil
-}
-
-func configScope(global bool) string {
-	if global {
-		return "--global"
-	}
-	return "--local"
 }
