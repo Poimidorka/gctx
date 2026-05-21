@@ -11,10 +11,16 @@ import (
 //TODO: consider go-git as an alternative of running commands manually
 // dependency weights 10MB
 
-//TODO: add support for the global flag
+// getGitConfigPath returns the git config path for the requested scope.
+func getGitConfigPath(global bool) (string, error) {
+	if global {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, ".gitconfig"), nil
+	}
 
-// getGitConfigPath returns the config path for the active .git directory.
-func getGitConfigPath() (string, error) {
 	output, err := exec.Command(`git`, `rev-parse`, `--absolute-git-dir`).CombinedOutput()
 	if err != nil {
 		message := strings.TrimSpace(string(output))
@@ -26,8 +32,8 @@ func getGitConfigPath() (string, error) {
 	return filepath.Join(strings.TrimSpace(string(output)), "config"), nil
 }
 
-func readCurrentGitConfig() (*FileContent, error) {
-	path, err := getGitConfigPath()
+func readCurrentGitConfig(global bool) (*FileContent, error) {
+	path, err := getGitConfigPath(global)
 	if err != nil {
 		return nil, err
 	}
@@ -38,18 +44,25 @@ func readCurrentGitConfig() (*FileContent, error) {
 	return (*FileContent)(&content), nil
 }
 
-func getCurrentGtxProfile() (string, error) {
-	out, err := exec.Command("git", "config", "--local", "--get", "gctx.profile").CombinedOutput()
+func getCurrentGtxProfile(global bool) (string, error) {
+	out, err := exec.Command("git", "config", configScope(global), "--get", "gctx.profile").CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("couldn't get current gctx profile: %w: %s", err, strings.TrimSpace(string(out)))
 	}
 	return strings.TrimSpace(string(out)), nil
 }
 
-func setGtxProfile(profile string) error {
-	out, err := exec.Command("git", "config", "--local", "--replace-all", "gctx.profile", profile).CombinedOutput()
+func setGtxProfile(profile string, global bool) error {
+	out, err := exec.Command("git", "config", configScope(global), "--replace-all", "gctx.profile", profile).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("couldn't set current gctx profile: %w: %s", err, strings.TrimSpace(string(out)))
 	}
 	return nil
+}
+
+func configScope(global bool) string {
+	if global {
+		return "--global"
+	}
+	return "--local"
 }

@@ -21,14 +21,14 @@ gctx
 When no profile is active:
 
 ```text
-(didn't find active profile)
+No active context.
 p1 p2 p3
 ```
 
 When a profile is active:
 
 ```text
-current used profile: p1
+Current context: "p1".
 p1 p2 p3
 ```
 
@@ -36,6 +36,7 @@ Apply a profile to the current Git repository:
 
 ```bash
 gctx p1
+# ✔ Switched to context "p1".
 ```
 
 Save the current repository Git config as a profile:
@@ -43,6 +44,7 @@ Save the current repository Git config as a profile:
 ```bash
 gctx p1 --save
 gctx p1 -s
+# ✔ Saved context "p1".
 ```
 
 Remove a profile:
@@ -50,6 +52,18 @@ Remove a profile:
 ```bash
 gctx p1 --remove
 gctx p1 -r
+# ✔ Removed context "p1".
+```
+
+Use the global Git config instead of the current repository config:
+
+```bash
+gctx --global
+gctx -g
+gctx p1 --global
+gctx p1 -g
+gctx p1 --save --global
+gctx p1 -s -g
 ```
 
 Use a custom profile directory:
@@ -79,6 +93,7 @@ make run
 make run ARGS="p1 --save"
 make run ARGS="p1"
 make run ARGS="p1 --remove"
+make run ARGS="p1 --global"
 ```
 
 The built binary is written to:

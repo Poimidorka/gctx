@@ -13,6 +13,7 @@ import (
 var (
 	// Path to the config directory, contains named git configs
 	cfgDir        string
+	globalProfile bool
 	removeProfile bool
 	saveProfile   bool
 	rootCmd       = &cobra.Command{
@@ -26,30 +27,30 @@ var (
 			store := NewProfileStore(cfgDir)
 			if len(args) == 0 {
 				if saveProfile || removeProfile {
-					return fmt.Errorf("profile name is required with --save or --remove")
+					return fmt.Errorf("%s", ProfileNameRequiredMessage())
 				}
-				return printProfiles(cmd.OutOrStdout(), store)
+				return printProfiles(cmd.OutOrStdout(), store, globalProfile)
 			}
 
 			profile := args[0]
 			switch {
 			case saveProfile && removeProfile:
-				return fmt.Errorf("use either --save or --remove, not both")
+				return fmt.Errorf("%s", ConflictingActionMessage())
 			case saveProfile:
-				if err := saveCurrentGitProfile(store, profile); err != nil {
+				if err := saveCurrentGitProfile(store, profile, globalProfile); err != nil {
 					return err
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%s saved successfully\n", profile)
+				fmt.Fprintln(cmd.OutOrStdout(), SavedContextMessage(profile))
 			case removeProfile:
 				if err := store.Remove(profile); err != nil {
 					return err
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%s removed successfully\n", profile)
+				fmt.Fprintln(cmd.OutOrStdout(), RemovedContextMessage(profile))
 			default:
-				if err := applyGitProfile(store, profile, false); err != nil {
+				if err := applyGitProfile(store, profile, globalProfile); err != nil {
 					return err
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%s changed successfully\n", profile)
+				fmt.Fprintln(cmd.OutOrStdout(), SwitchedContextMessage(profile))
 			}
 			return nil
 		},
@@ -59,6 +60,7 @@ var (
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgDir, "config", "", "config directory (default is $HOME/.config/gctx)")
+	rootCmd.Flags().BoolVarP(&globalProfile, "global", "g", false, "use the global git config")
 	rootCmd.Flags().BoolVarP(&removeProfile, "remove", "r", false, "remove the named profile")
 	rootCmd.Flags().BoolVarP(&saveProfile, "save", "s", false, "save the current git config as the named profile")
 }
@@ -80,12 +82,12 @@ func Execute() error {
 	return rootCmd.Execute()
 }
 
-func printProfiles(out io.Writer, store *ProfileStore) error {
-	current, err := getCurrentGtxProfile()
+func printProfiles(out io.Writer, store *ProfileStore, global bool) error {
+	current, err := getCurrentGtxProfile(global)
 	if err != nil {
-		fmt.Fprintln(out, "(didn't find active profile)")
+		fmt.Fprintln(out, NoActiveContextMessage)
 	} else {
-		fmt.Fprintf(out, "current used profile: \x1b[32m%s\x1b[0m\n", current)
+		fmt.Fprintln(out, CurrentContextMessage(current))
 	}
 
 	profiles := store.List()
