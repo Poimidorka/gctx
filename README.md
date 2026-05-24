@@ -127,3 +127,35 @@ Clean build output:
 ```bash
 make clean
 ```
+
+## Installation
+
+Install with Go:
+
+```bash
+go install github.com/Poimidorka/gctx@latest
+```
+
+After a tagged release, install with Homebrew from the tap:
+
+```bash
+brew tap Poimidorka/tap
+brew install --cask gctx
+```
+
+## Releases
+
+Releases are built by GoReleaser when a `v*` tag is pushed:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow builds Linux, macOS, and Windows archives, publishes checksums, and updates the Homebrew tap configured in `.goreleaser.yaml`.
+
+Repository setup needed before the first release:
+
+- Create `Poimidorka/homebrew-tap`.
+- Add a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret with write access to that tap.
+- Add a project license before publishing broadly.
