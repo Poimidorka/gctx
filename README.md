@@ -19,7 +19,7 @@ gctx
 ```
 
 When no profile is active:
-
+   
 ```text
 No active profile in current git config.
 p1 p2 p3
@@ -147,7 +147,7 @@ brew install --cask gctx
 
 Releases are built by GoReleaser when a `v*` tag is pushed:
 
-```bash 
+```bash   
 git tag v0.1.0
 git push origin v0.1.0
 ```
