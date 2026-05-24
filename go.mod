@@ -1,4 +1,4 @@
-module gctx
+module github.com/Poimidorka/gctx
 
 go 1.26
 

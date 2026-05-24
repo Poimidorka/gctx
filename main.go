@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"gctx/cmd"
+	"github.com/Poimidorka/gctx/cmd"
 )
 
 func main() {

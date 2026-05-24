@@ -49,7 +49,7 @@ func runProfileCommand(out io.Writer, profileStore *ProfileStore, profile string
 	fmt.Fprintln(out, RunningCommandMessage(profile, command))
 
 	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Env = append(os.Environ(), "GIT_CONFIG_GLOBAL="+ConfigGlobalEnv)
+	cmd.Env = append(os.Environ(), ConfigGlobalEnv+"="+tmpPath)
 	if interactive {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout

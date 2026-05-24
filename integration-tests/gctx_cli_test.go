@@ -1,7 +1,7 @@
 package integration_tests
 
 import (
-	gctxcmd "gctx/cmd"
+	gctxcmd "github.com/Poimidorka/gctx/cmd"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -297,6 +297,29 @@ func TestCommandConflictsWithSave(t *testing.T) {
 	out, err := runGctx(t, repo, configDir, "work", "-c", "git status", "--save")
 	requireError(t, err, out)
 	requireContains(t, out, gctxcmd.ConflictingCommandActionMessage())
+}
+
+func TestRejectsProfilePathTraversal(t *testing.T) {
+	repo := initGitRepo(t)
+	configDir := t.TempDir()
+	outsidePath := filepath.Join(configDir, "..", "escaped.config")
+	runGit(t, repo, "config", "--local", "user.name", "Escape Alice")
+
+	out, err := runGctx(t, repo, configDir, "../escaped", "--save")
+	requireError(t, err, out)
+
+	if _, err := os.Stat(outsidePath); !os.IsNotExist(err) {
+		t.Fatal("profile escaped config directory", err)
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	dir := t.TempDir()
+	configDir := t.TempDir()
+
+	out, err := runGctx(t, dir, configDir, "--version")
+	requireNoError(t, err, out)
+	requireContains(t, out, "gctx version")
 }
 
 func runGctx(t *testing.T, dir, configDir string, args ...string) (string, error) {

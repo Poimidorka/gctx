@@ -14,6 +14,16 @@ type ProfileStore struct {
 
 type FileContent []byte
 
+func profileFileName(profile string) (string, error) {
+	if profile == "" {
+		return "", fmt.Errorf("profile name cannot be empty")
+	}
+	if filepath.IsAbs(profile) || filepath.Base(profile) != profile {
+		return "", fmt.Errorf("invalid profile name %q: path separators are not allowed", profile)
+	}
+	return addExt(profile), nil
+}
+
 func hasExt(filename string) bool {
 	return strings.HasSuffix(filename, ".config")
 }
@@ -30,7 +40,11 @@ func removeExt(fileName string) string {
 }
 
 func (s *ProfileStore) Set(name string, content *FileContent) error {
-	err := os.WriteFile(filepath.Join(s.configDir, addExt(name)), *content, 0o600)
+	fileName, err := profileFileName(name)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(s.configDir, fileName), *content, 0o600)
 	if err != nil {
 		return err
 	}
@@ -38,7 +52,11 @@ func (s *ProfileStore) Set(name string, content *FileContent) error {
 }
 
 func (s *ProfileStore) Remove(name string) error {
-	err := os.Remove(filepath.Join(s.configDir, addExt(name)))
+	fileName, err := profileFileName(name)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(filepath.Join(s.configDir, fileName))
 	if err != nil {
 		return err
 	}
@@ -64,6 +82,9 @@ func (s *ProfileStore) List() []string {
 }
 
 func (s *ProfileStore) Contains(profile string) (bool, []string) {
+	if _, err := profileFileName(profile); err != nil {
+		return false, s.List()
+	}
 	profiles := s.List()
 	for _, current := range profiles {
 		if current == profile {
@@ -75,7 +96,11 @@ func (s *ProfileStore) Contains(profile string) (bool, []string) {
 
 // Get returns FileContent for a given profile
 func (s *ProfileStore) Get(profile string) (*FileContent, error) {
-	content, err := os.ReadFile(filepath.Join(s.configDir, addExt(profile)))
+	fileName, err := profileFileName(profile)
+	if err != nil {
+		return nil, err
+	}
+	content, err := os.ReadFile(filepath.Join(s.configDir, fileName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read profile %s: %w", profile, err)
 	}
