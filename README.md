@@ -153,9 +153,3 @@ git push origin v0.1.0
 ```
 
 The release workflow builds Linux, macOS, and Windows archives, publishes checksums, and updates the Homebrew tap configured in `.goreleaser.yaml`.
-
-Repository setup needed before the first release:
-
-- Create `Poimidorka/homebrew-tap`.
-- Add a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret with write access to that tap.
-- Add a project license before publishing broadly.
