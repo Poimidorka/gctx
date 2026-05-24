@@ -18,9 +18,11 @@ var (
 	interactive   bool
 	removeProfile bool
 	saveProfile   bool
+	version       = "dev"
 	rootCmd       = &cobra.Command{
 		Use:           "gctx [profile]",
 		Short:         "Switch Git profiles",
+		Version:       version,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Long:          LongDescription,
